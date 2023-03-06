@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>Embuddy</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="todo\**" />
+    <Compile Remove="_ignore\**" />
+    <Compile Remove="_todo\**" />
+    <EmbeddedResource Remove="todo\**" />
+    <EmbeddedResource Remove="_ignore\**" />
+    <EmbeddedResource Remove="_todo\**" />
+    <None Remove="todo\**" />
+    <None Remove="_ignore\**" />
+    <None Remove="_todo\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="consolecontrol-master.zip" />
+    <None Remove="embuddy.sublime-project" />
+    <None Remove="embuddy.sublime-workspace" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.0-preview.1.23110.8" />
+    <PackageReference Include="Tftp.Net" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Ephemera.NBagOfTricks">
+      <HintPath>lib\Ephemera.NBagOfTricks.dll</HintPath>
+    </Reference>
+    <Reference Include="Ephemera.NBagOfUis">
+      <HintPath>lib\Ephemera.NBagOfUis.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
