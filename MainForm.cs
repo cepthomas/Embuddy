@@ -15,7 +15,9 @@ using System.Drawing.Design;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Ephemera.NBagOfTricks;
+using Ephemera.NBagOfTricks.Slog;
 using Ephemera.NBagOfUis;
+
 
 namespace Embuddy
 {
@@ -24,11 +26,13 @@ namespace Embuddy
         #region Fields
         UserSettings _settings;
 
-        Connection _connDlog;
+        Connection _connDlog = new Telnet();
 
-        Connection _connCli;
+        Connection _connCli = new Telnet();
 
-        Connection _connUpload;
+        Connection _connUpload = new Tftp();
+
+        readonly Logger _logger = LogManager.CreateLogger("MainForm");
 
         #endregion
 
@@ -45,13 +49,19 @@ namespace Embuddy
             Size = _settings.FormGeometry.Size;
             WindowState = FormWindowState.Normal;
             //BackColor = _settings.BackColor;
+
+            // Set up logging.
+            LogManager.MinLevelFile = LogLevel.Trace;
+            LogManager.MinLevelNotif = LogLevel.Debug;
+            LogManager.LogMessage += LogManager_LogMessage;
+            LogManager.Run();
         }
 
         protected override void OnLoad(EventArgs e)
         {
-            _connCli = new()
+            _connCli = new Telnet()
             {
-                Protocol = ProtocolType.Telnet,
+                //ConnType = ConnectionType.Telnet,
                 Name = "CLI",
                 IP = IPAddress.Parse("192.168.0.1"),
                 Port = 8001,
@@ -63,9 +73,9 @@ namespace Embuddy
             _connCli.Response += Conn_Response;
             Controls.Add(_connCli);
 
-            _connDlog = new()
+            _connDlog = new Telnet()
             {
-                Protocol = ProtocolType.Telnet,
+                //ConnType = ConnectionType.Telnet,
                 Name = "DBG",
                 IP = IPAddress.Parse("192.168.0.1"),
                 Port = 8002,
@@ -77,9 +87,9 @@ namespace Embuddy
             _connDlog.Response += Conn_Response;
             Controls.Add(_connDlog);
 
-            _connUpload = new()
+            _connUpload = new Tftp()
             {
-                Protocol = ProtocolType.Tftp,
+                //ConnType = ConnectionType.Tftp,
                 Name = "UPL",
                 IP = IPAddress.Parse("192.168.0.1"),
                 Port = 69,
@@ -90,7 +100,6 @@ namespace Embuddy
             };
             _connUpload.Response += Conn_Response;
             Controls.Add(_connUpload);
-
 
             tvTraffic.MatchColors.Add(_connCli.Name, _connCli.DisplayColor);
             tvTraffic.MatchColors.Add(_connDlog.Name, _connDlog.DisplayColor);
@@ -105,7 +114,6 @@ namespace Embuddy
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-
             // Just in case.
             //KillAll();
 
@@ -134,7 +142,7 @@ namespace Embuddy
             if (disposing)
             {
                 // Wait a bit in case there are some lingering events.
-                System.Threading.Thread.Sleep(100);
+                Thread.Sleep(100);
 
                 _connDlog.Dispose();
                 _connCli.Dispose();
@@ -146,6 +154,15 @@ namespace Embuddy
             base.Dispose(disposing);
         }
         #endregion
+
+
+
+        void LogManager_LogMessage(object? sender, LogMessageEventArgs e)
+        {
+            //Debug.WriteLine(e.Message);
+            //Console.WriteLine(e.Message);
+        }
+
 
         #region Private functions
 

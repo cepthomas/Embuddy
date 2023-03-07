@@ -10,12 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="lib\**" />
     <Compile Remove="todo\**" />
     <Compile Remove="_ignore\**" />
     <Compile Remove="_todo\**" />
+    <EmbeddedResource Remove="lib\**" />
     <EmbeddedResource Remove="todo\**" />
     <EmbeddedResource Remove="_ignore\**" />
     <EmbeddedResource Remove="_todo\**" />
+    <None Remove="lib\**" />
     <None Remove="todo\**" />
     <None Remove="_ignore\**" />
     <None Remove="_todo\**" />
@@ -38,6 +41,12 @@
     </Reference>
     <Reference Include="Ephemera.NBagOfUis">
       <HintPath>lib\Ephemera.NBagOfUis.dll</HintPath>
+    </Reference>
+    <Reference Include="Ephemera.NStateMachine">
+      <HintPath>lib\Ephemera.NStateMachine.dll</HintPath>
+    </Reference>
+    <Reference Include="InnoMakerUsb2CanLib">
+      <HintPath>lib\InnoMakerUsb2CanLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 

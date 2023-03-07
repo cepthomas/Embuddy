@@ -12,14 +12,15 @@ using System.Text.Json;
 using System.Net;
 using Ephemera.NBagOfTricks;
 
+
 namespace Embuddy
 {
-    public enum ProtocolType { None, Tftp, Telnet, CAN };
+    public enum ConnectionType { None, Tftp, Telnet, Can, Socket };
 
-    public enum ResponseCat { INF, WRN, ERR, LOG };
+    public enum ResponseCat { RES, INF, WRN, ERR, LOG };
 
     
-    public partial class Connection : UserControl
+    public abstract partial class Connection : UserControl
     {
         #region Fields
         // string _prompt = "";
@@ -27,9 +28,10 @@ namespace Embuddy
         #endregion
 
         #region Properties
-        public ProtocolType Protocol { get; set; } = ProtocolType.None;
+        //public ConnectionType ConnType { get; set; } = ConnectionType.None;
 
-        public string Name { get; set; } = "???";
+        //public string Name { get; set; } = "???";
+        //public string Id { get; set; } = "???";
 
         public IPAddress IP { get; set; } = IPAddress.Parse("127.0.0.1");
 
@@ -77,6 +79,13 @@ namespace Embuddy
         #endregion
 
         #region Public functions
+        public abstract void Open();
+
+        public abstract void Close();
+
+        public abstract void Command(string command);
+
+        //public abstract void Send(byte[] data);
 
         #endregion
 

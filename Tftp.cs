@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Tftp.Net;
+using Ephemera.NBagOfTricks.Slog;
 
 
 namespace Embuddy
@@ -19,6 +20,7 @@ namespace Embuddy
         #region Fields
         AutoResetEvent _tftpTransferFinishedEvent = new AutoResetEvent(false);
         #endregion
+        readonly Logger _logger = LogManager.CreateLogger("Tftp");
 
         #region Properties
 
@@ -34,11 +36,27 @@ namespace Embuddy
 
             base.Dispose(disposing);
         }
-
         #endregion
 
         #region Public functions
-        public void Command(string msg)
+        public override void Open()
+        {
+            try
+            {
+                // Stateless so nothing to do.
+            }
+            catch
+            {
+                OnResponse(new ResponseEventArgs(ResponseCat.ERR, $"Failed while connecting to : {IP}:{Port}"));
+            }
+        }
+
+        public override void Close()
+        {
+            // Stateless so nothing to do.
+        }
+
+        public override void Command(string command)
         {
             //put - Transfers the file Source on the local computer to the file Destination on the remote computer.
             // Because the TFTP protocol does not support user authentication, the user must be logged onto the remote computer,
