@@ -19,6 +19,10 @@ using Ephemera.NBagOfTricks.Slog;
 using Ephemera.NBagOfUis;
 
 
+//TODO RTT: https://wiki.segger.com/RTT#TELNET_channel_of_J-Link_software
+// J-Link RTT Client acts as a Telnet client, but automatically tries to reconnect to a J-Link connection when a debug session is closed. 
+
+
 namespace Embuddy
 {
     public partial class MainForm : Form
@@ -26,11 +30,6 @@ namespace Embuddy
         #region Fields
         UserSettings _settings;
 
-        Connection _connDlog = new Telnet();
-
-        Connection _connCli = new Telnet();
-
-        Connection _connUpload = new Tftp();
 
         readonly Logger _logger = LogManager.CreateLogger("MainForm");
 
@@ -41,69 +40,27 @@ namespace Embuddy
         {
             InitializeComponent();
 
-            _settings = (UserSettings)SettingsCore.Load(".", typeof(UserSettings));
+            // Must do this first before initializing.
+            string appDir = MiscUtils.GetAppDataDir("Embuddy", "Ephemera");
+            _settings = (UserSettings)SettingsCore.Load(appDir, typeof(UserSettings));
 
+            // Set up logging.
+            LogManager.MinLevelFile = LogLevel.Trace;
+            LogManager.MinLevelNotif = LogLevel.Debug;
+            LogManager.LogMessage += LogManager_LogMessage;
+            LogManager.Run(Path.Join(appDir, "log.txt"), 100000);
 
             // Main form.
             Location = _settings.FormGeometry.Location;
             Size = _settings.FormGeometry.Size;
             WindowState = FormWindowState.Normal;
             //BackColor = _settings.BackColor;
-
-            // Set up logging.
-            LogManager.MinLevelFile = LogLevel.Trace;
-            LogManager.MinLevelNotif = LogLevel.Debug;
-            LogManager.LogMessage += LogManager_LogMessage;
-            LogManager.Run();
         }
 
         protected override void OnLoad(EventArgs e)
         {
-            _connCli = new Telnet()
-            {
-                //ConnType = ConnectionType.Telnet,
-                Name = "CLI",
-                IP = IPAddress.Parse("192.168.0.1"),
-                Port = 8001,
-                DisplayColor = Color.Bisque,
-                Font = _settings.ConsoleFont,
-                Location = new(tvTraffic.Left, tvTraffic.Bottom + 5),
-               // Size = new(300, 30)
-            };
-            _connCli.Response += Conn_Response;
-            Controls.Add(_connCli);
+            Init_TODO();
 
-            _connDlog = new Telnet()
-            {
-                //ConnType = ConnectionType.Telnet,
-                Name = "DBG",
-                IP = IPAddress.Parse("192.168.0.1"),
-                Port = 8002,
-                DisplayColor = Color.Aqua,
-                Font = _settings.ConsoleFont,
-                Location = new(tvTraffic.Left, _connCli.Bottom + 5),
-                //Size = new(300, 30)
-            };
-            _connDlog.Response += Conn_Response;
-            Controls.Add(_connDlog);
-
-            _connUpload = new Tftp()
-            {
-                //ConnType = ConnectionType.Tftp,
-                Name = "UPL",
-                IP = IPAddress.Parse("192.168.0.1"),
-                Port = 69,
-                DisplayColor = Color.LightYellow,
-                Font = _settings.ConsoleFont,
-                Location = new(tvTraffic.Left, _connDlog.Bottom + 5),
-                //Size = new(300, 30)
-            };
-            _connUpload.Response += Conn_Response;
-            Controls.Add(_connUpload);
-
-            tvTraffic.MatchColors.Add(_connCli.Name, _connCli.DisplayColor);
-            tvTraffic.MatchColors.Add(_connDlog.Name, _connDlog.DisplayColor);
-            tvTraffic.MatchColors.Add(_connUpload.Name, _connUpload.DisplayColor);
             tvTraffic.MatchColors.Add("ERR", _settings.ErrorColor);
             //tvTraffic.BackColor = Color.Cornsilk;
             tvTraffic.Font = _settings.ConsoleFont;
@@ -155,15 +112,6 @@ namespace Embuddy
         }
         #endregion
 
-
-
-        void LogManager_LogMessage(object? sender, LogMessageEventArgs e)
-        {
-            //Debug.WriteLine(e.Message);
-            //Console.WriteLine(e.Message);
-        }
-
-
         #region Private functions
 
         void Conn_Response(object? sender, ResponseEventArgs e)
@@ -173,6 +121,104 @@ namespace Embuddy
             string s = $"{conn!.Name} {e.Cat} {e.Content}";
             tvTraffic.AppendLine(s);
         }
+
+
+        // /// <summary>
+        // /// 
+        // /// </summary>
+        // /// <param name="cat"></param>
+        // /// <param name="msg"></param>
+        // void WriteLine(string msg)// TODO color
+        // {
+        //     tvTraffic.AppendText($"> {msg}{Environment.NewLine}");
+        // }
+
+
+        void LogManager_LogMessage(object? sender, LogMessageEventArgs e)
+        {
+            tvTraffic.AppendLine($"> {e.Message}");
+        }
+
+
+        /// <summary>
+        /// Edit the common options in a property grid.
+        /// </summary>
+        void Settings_Click(object? sender, EventArgs e)
+        {
+            var changes = SettingsEditor.Edit(_settings, "User Settings", 500);
+
+            // Detect changes of interest.
+            bool restart = false;
+
+            foreach (var (name, cat) in changes)
+            {
+                switch (name)
+                {
+                    case "TODO":
+                        restart = true;
+                        break;
+                }
+            }
+
+            if (restart)
+            {
+                MessageBox.Show("Restart required for changes to take effect");
+            }
+        }
+        #endregion
+
+        ////////////////// SCRIPTY? //////////////////////
+
+        Connection _connDlog = new Telnet();
+        Connection _connCli = new Telnet();
+        Connection _connUpload = new Tftp();
+
+        void Init_TODO()
+        {
+            _connCli = new Telnet()
+            {
+                //ConnType = ConnectionType.Telnet,
+                Name = "CLI",
+                IP = IPAddress.Parse("192.168.0.1"),
+                Port = 8001,
+                DisplayColor = Color.Bisque,
+                Font = _settings.ConsoleFont,
+                Location = new(tvTraffic.Left, tvTraffic.Bottom + 5),
+               // Size = new(300, 30)
+            };
+            _connCli.Response += Conn_Response;
+            Controls.Add(_connCli);
+
+            _connDlog = new Telnet()
+            {
+                //ConnType = ConnectionType.Telnet,
+                Name = "DBG",
+                IP = IPAddress.Parse("192.168.0.1"),
+                Port = 8002,
+                DisplayColor = Color.Aqua,
+                Font = _settings.ConsoleFont,
+                Location = new(tvTraffic.Left, _connCli.Bottom + 5),
+                //Size = new(300, 30)
+            };
+            _connDlog.Response += Conn_Response;
+            Controls.Add(_connDlog);
+
+            _connUpload = new Tftp()
+            {
+                //ConnType = ConnectionType.Tftp,
+                Name = "UPL",
+                IP = IPAddress.Parse("192.168.0.1"),
+                Port = 69,
+                DisplayColor = Color.LightYellow,
+                Font = _settings.ConsoleFont,
+                Location = new(tvTraffic.Left, _connDlog.Bottom + 5),
+                //Size = new(300, 30)
+            };
+            _connUpload.Response += Conn_Response;
+            Controls.Add(_connUpload);
+
+        }
+
 
         void UpdateAgg_Click(object sender, EventArgs e)
         {
@@ -226,129 +272,5 @@ namespace Embuddy
             // "modinfo",     1, 1,  "",                 "Report the version information for input modules"},
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cat"></param>
-        /// <param name="msg"></param>
-        void WriteLine(string msg)// TODO color
-        {
-            tvTraffic.AppendText($"> {msg}{Environment.NewLine}");
-        }
-
-        void Debug_Click(object sender, EventArgs e)
-        {
-            //DoChecksum();
-
-            tvTraffic.Clear();
-
-            var ls = File.ReadAllLines(@"C:\Dev\AL\lmes\Embuddy\files\some.txt");
-
-            foreach (var l in ls)
-            {
-                WriteLine(l);
-
-            }
-        }
-
-        /// <summary>
-        /// Edit the common options in a property grid.
-        /// </summary>
-        void Settings_Click(object? sender, EventArgs e)
-        {
-            var changes = SettingsEditor.Edit(_settings, "User Settings", 500);
-
-            // Detect changes of interest.
-            bool restart = false;
-
-            foreach (var (name, cat) in changes)
-            {
-                switch (name)
-                {
-                    case "TODO":
-                        restart = true;
-                        break;
-                }
-            }
-
-            if (restart)
-            {
-                MessageBox.Show("Restart required for changes to take effect");
-            }
-        }
-        #endregion
-
-        ////////////////// STUFF //////////////////////
-
-        void DoChecksum()
-        {
-            //- bins\dummy5120.bin has 5120 bytes = 1280 uint = 640 msg/block = 2.5 pages
-            //- TBD> Num:5120 Chk1:83178260 Chk2:40 XOR:0 
-            //- bins\dummy5121.bin has 5121 bytes = 1281 uint = 640 msg/block = 2.5 pages
-            //- TBD> Num:5121 Chk1:83178281 Chk2:61 XOR:21
-            //- agg rounds up to 3 pages = 6144 bytes = 1536 uint = 768 msg
-
-            byte[] data = File.ReadAllBytes(@"C:\Dev\AL\lmes\Embuddy\files\dummy5120.bin");
-
-
-            var numBytes = data.Length;
-            // Pad.
-            while(numBytes % 4 != 0) numBytes++;
-            byte[] data2 = new byte[numBytes];
-            byte[] xors = new byte[numBytes];
-            data.CopyTo(data2, 0);
-
-            byte chk_xor = 0;
-            uint chk_add1 = 0;
-            byte chk_add2 = 0;
-
-            // Simple int add chksum.
-            for (int i = 0; i < data2.Length; i += 4)
-            {
-                uint w = data2[i];
-                w += (uint)(data2[i + 1]) << 8;
-                w += (uint)(data2[i + 2]) << 16;
-                w += ((uint)data2[i + 3]) << 24;
-                chk_add1 += w;
-            }
-
-            // Simple byte add chksum.
-            for (int i = 0; i < data2.Length; i++)
-            {
-                chk_add2 += data2[i];
-            }
-
-            // XOR
-            //for each byte b in the buffer do
-            //   lrc:= (lrc + b) and 0xFF
-            //lrc:= (((lrc XOR 0xFF) +1) and 0xFF)
-
-
-            for (int i = 0; i < data2.Length; i++)
-            {
-
-
-
-                //chk_xor ^= data2[i];
-                xors[i] = chk_xor;
-            }
-
-            //string formatString = String.Format("{0,10:G}: {0,10:X}", value);
-
-            string msg = $"Num:{data.Length} Chk1:{chk_add1:X} Chk2:{chk_add2:X} XOR:{chk_xor:X}";
-            WriteLine(msg);
-        }
-
-        void Fill()
-        {
-            tvTraffic.Clear();
-
-            var ls = File.ReadAllLines(@"C:\Dev\AL\lmes\Embuddy\some.txt");
-
-            foreach (var l in ls)
-            {
-                tvTraffic.AppendText($"> {l}{Environment.NewLine}");
-            }
-        }
     }
 }

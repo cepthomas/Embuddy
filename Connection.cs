@@ -13,6 +13,14 @@ using System.Net;
 using Ephemera.NBagOfTricks;
 
 
+
+//TODO add:
+//- enable disable log
+//- indicate connection status
+//- indicate send/rcv
+
+
+
 namespace Embuddy
 {
     public enum ConnectionType { None, Tftp, Telnet, Can, Socket };

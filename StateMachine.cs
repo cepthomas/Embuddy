@@ -12,8 +12,6 @@ namespace Embuddy
     ////////////////////////////// client //////////////////////////////
 
     /// <summary>
-    /// Shows how to implement a state machine in an application.
-    /// Also does rudimentary testing.
     /// </summary>
     public class StateMachine
     {
